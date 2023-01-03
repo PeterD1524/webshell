@@ -10,14 +10,15 @@ function in_preformatted_text(string $string)
     return in_tag("pre", htmlspecialchars($string));
 }
 
-function block(string $title, string $content)
+function block(string $id, string $title, string $content)
 {
-    return in_tag(
-        "div",
+    return '<div id="' .
+        htmlspecialchars($id) .
+        '">' .
         in_tag("h3", htmlspecialchars($title)) .
-            in_preformatted_text($content) .
-            in_tag("textarea", htmlspecialchars(base64_encode($content))),
-    );
+        in_preformatted_text("") .
+        in_tag("textarea", htmlspecialchars(base64_encode($content))) .
+        "</div>";
 }
 
 class Sobble
@@ -38,9 +39,12 @@ class Sobble
 
     public function html()
     {
-        return block("status", print_r($this->status, true)) .
-            block("stdout", $this->stdout_data) .
-            block("stderr", $this->stderr_data);
+        return in_tag(
+            "div",
+            block("status", "status", json_encode($this->status)) .
+                block("stdout", "stdout", $this->stdout_data) .
+                block("stderr", "stderr", $this->stderr_data),
+        );
     }
 }
 
@@ -131,6 +135,7 @@ function main()
     $sobble = $cinderace->pyroBall($command);
     echo '<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">';
     echo $sobble->html();
+    echo '<script>document.addEventListener("DOMContentLoaded",(()=>{document.querySelector("#status > pre").textContent=JSON.stringify(JSON.parse(atob(document.querySelector("#status > textarea").value)),null,"\t"),document.querySelector("#stdout > pre").textContent=atob(document.querySelector("#stdout > textarea").value),document.querySelector("#stderr > pre").textContent=atob(document.querySelector("#stderr > textarea").value)}));</script>';
 }
 
 main();
